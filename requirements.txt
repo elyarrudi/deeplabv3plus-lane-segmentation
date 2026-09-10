@@ -1,0 +1,10 @@
+onnxruntime-gpu==1.23.2
+# TensorFlow 2.16 requires NumPy < 2; this also remains compatible with ONNX Runtime.
+numpy==1.26.4
+# Headless variant is appropriate for Docker; it still provides `cv2` and video I/O.
+opencv-python-headless==4.10.0.84
+# Required by export_onnx.py.  Keeping these here lets the same image both export
+# the Keras model and run inference on the generated ONNX file.
+tensorflow==2.16.1
+tf2onnx==1.16.1
+onnx==1.16.2

@@ -1,0 +1,10 @@
+.git
+.ipynb_checkpoints
+__pycache__
+*.pyc
+*.pyo
+*.mp4
+*.onnx
+*.keras
+.venv
+venv
