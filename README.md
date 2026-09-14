@@ -39,9 +39,12 @@ The project uses two model files, each needed for a different step. Download the
 
 ## 🧠 Training
 
-The complete training workflow is in [`train.ipynb`](train.ipynb). Training uses **one unified dataset created by combining two separate lane-segmentation datasets**. Their frames and binary lane masks were consolidated into one standardized `frames` / `lane-masks` structure before validation and splitting.
+The complete training workflow is in [`train_stage1.ipynb`](train_stage1.ipynb). Training uses **one unified dataset created by combining two separate lane-segmentation datasets**:
 
-🔒 The two source datasets were downloaded from online sources, but their original download links are no longer available to the project author. If the unified dataset is required for reproduction or research, it can be provided separately on request.
+- [Preprocessed-1](https://www.kaggle.com/datasets/rangalamahesh/preprocessed-1)
+- [Line Segmentation](https://www.kaggle.com/datasets/mehmetokuyar/line-segmentation)
+
+Their frames and binary lane masks were consolidated into one standardized `frames` / `lane-masks` structure before validation and splitting.
 
 The notebook validates image/mask pairs and performs a **sequence-grouped train/validation split** (`random_state=42`). Grouping frames that belong to the same video sequence keeps near-duplicate frames on one side of the split, avoiding leakage between the training and validation sets.
 
@@ -56,7 +59,7 @@ The notebook validates image/mask pairs and performs a **sequence-grouped train/
 
 ### Custom DeepLabV3+ architecture 🔬
 
-The following architecture description is taken directly from the model-building code in [`train.ipynb`](train.ipynb). It is a carefully customized **DeepLabV3+ implementation with output stride 16**, built manually in TensorFlow/Keras on top of the pretrained ResNet50 backbone.
+The following architecture description is taken directly from the model-building code in [`train_stage1.ipynb`](train_stage1.ipynb). It is a carefully customized **DeepLabV3+ implementation with output stride 16**, built manually in TensorFlow/Keras on top of the pretrained ResNet50 backbone.
 
 | Component | Design |
 | --- | --- |
@@ -78,14 +81,16 @@ Combined loss = Focal loss (α = 0.25, γ = 2.0) + 0.5 × weighted Dice loss
 - **Focal loss** emphasizes difficult and minority-class pixels.
 - **Weighted Dice loss** directly rewards mask overlap and improves sensitivity to thin lane markings.
 - **AdamW** is used with an initial learning rate of `2e-4` and weight decay of `1e-4`.
-- The ResNet backbone is frozen during the selected Stage-1 training run, allowing the custom segmentation head to adapt without immediately disturbing pretrained visual features.
+- The ResNet backbone is frozen during training, allowing the custom segmentation head to adapt without immediately disturbing pretrained visual features.
 - `ModelCheckpoint` saves the weights with the highest validation Mean IoU; `EarlyStopping` restores the best weights; `ReduceLROnPlateau` halves the learning rate when validation loss stops improving. 🏆
 
 ### Training strategy and results 📊
 
-The ResNet50 backbone is kept frozen during the selected Stage-1 training run. This preserves the pretrained visual features and lets the new head adapt without disturbing them. The best checkpoint was reached at **epoch 14** and achieved the highest observed validation Mean IoU, so it was saved as the deployment candidate.
+The ResNet50 backbone is kept frozen throughout the **20-epoch** training run in [`train_stage1.ipynb`](train_stage1.ipynb). This preserves the pretrained visual features and lets the new head adapt without disturbing them. The best checkpoint was reached at **epoch 14** and achieved the highest observed validation Mean IoU, so it was saved as the deployment candidate.
 
-A selective fine-tuning stage (unfreezing the last 11 backbone layers at a lower learning rate) is also present in `train.ipynb`, but it was **not used as part of the final deployment model**. The reason is a clear generalization signal from Stage 1: after epoch 14, training metrics kept improving while `val_loss` began to rise and `val_mean_iou` no longer exceeded 0.7969. Continuing to fine-tune the pretrained backbone under this widening train/validation gap would have increased the risk of overfitting without a measurable gain in validation performance. The epoch-14 checkpoint was therefore retained as the final model.
+After epoch 14, training metrics kept improving while `val_loss` began to rise and `val_mean_iou` no longer exceeded 0.7969. Continuing to train under this widening train/validation gap would have increased the risk of overfitting without a measurable gain in validation performance. The epoch-14 checkpoint was therefore retained as the final model.
+
+A second stage that would unfreeze the last backbone layers at a lower learning rate was **omitted from the final training notebook**. The overfitting signal was already visible in Stage 1, so further fitting of pretrained features would have been unlikely to improve validation Mean IoU and more likely to hurt generalization. The deployed model is therefore the frozen-backbone, epoch-14 checkpoint.
 
 Selected epoch-14 metrics:
 
@@ -186,7 +191,7 @@ On successful startup, the logs show `CUDAExecutionProvider`; the green-overlay 
 
 | File | Purpose |
 | --- | --- |
-| `train.ipynb` | Dataset setup, augmentation, custom DeepLabV3+ training, and evaluation |
+| `train_stage1.ipynb` | Dataset setup, augmentation, and custom DeepLabV3+ training (frozen backbone, 20 epochs) |
 | `bestmodel.keras` | Best Keras checkpoint selected by validation Mean IoU — input to the ONNX exporter |
 | `export_onnx.py` | Keras-to-ONNX conversion and ONNX validation |
 | `deeplabv3plus_resnet50.onnx` | ONNX model used for inference |
