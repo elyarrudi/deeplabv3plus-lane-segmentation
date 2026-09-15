@@ -2,6 +2,8 @@
 
 > **Pixel-accurate lane segmentation for video, from TensorFlow training to GPU-accelerated ONNX inference.** ✨
 
+**Project goal.** This project was built to detect road lane markings at the pixel level in driving video and to turn that into a usable pipeline: train a segmentation model, then run it on video so each frame shows which pixels belong to the lanes.
+
 This project implements a **custom-built DeepLabV3+ with a ResNet50 backbone and output stride 16**. The DeepLabV3+ extension, ASPP, decoder, and output head are implemented manually in TensorFlow/Keras on top of an ImageNet-pretrained ResNet50 backbone. The trained network is then exported to ONNX and served through a GPU-accelerated ONNX Runtime video pipeline.
 
 ## 📥 Model downloads
