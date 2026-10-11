@@ -2,6 +2,23 @@
 
 > **Pixel-accurate lane segmentation for video, from TensorFlow training to GPU-accelerated ONNX inference.** ✨
 
+## 🌟 Results preview
+
+<table>
+  <tr>
+    <td width="50%"><img src="video1.gif" width="100%" alt="Animated lane segmentation results from video 1" /></td>
+    <td width="50%"><img src="video2.gif" width="100%" alt="Animated lane segmentation results from video 2" /></td>
+  </tr>
+</table>
+
+The GIF previews loop automatically in Markdown. The original sample videos are also included in the project root.
+
+<p align="center">
+  <img src="1.png" width="32%" alt="Lane segmentation result 1" />
+  <img src="2.png" width="32%" alt="Lane segmentation result 2" />
+  <img src="3.png" width="32%" alt="Lane segmentation result 3" />
+</p>
+
 **Project goal.** This project was built to detect road lane markings at the pixel level in driving video and to turn that into a usable pipeline: train a segmentation model, then run it on video so each frame shows which pixels belong to the lanes.
 
 This project implements a **custom-built DeepLabV3+ with a ResNet50 backbone and output stride 16**. The DeepLabV3+ extension, ASPP, decoder, and output head are implemented manually in TensorFlow/Keras on top of an ImageNet-pretrained ResNet50 backbone. The trained network is then exported to ONNX and served through a GPU-accelerated ONNX Runtime video pipeline.
@@ -28,16 +45,6 @@ The project uses two model files, each needed for a different step. Download the
 - **NHWC / NCHW auto-detection** in the ONNX runner.
 
 > 🔎 **Note on originality:** the DeepLabV3+ architecture and training pipeline are custom, manually-written implementations. Only the ResNet50 backbone uses ImageNet-pretrained weights.
-
-## 🌟 Results preview
-
-<p align="center">
-  <img src="1.png" width="32%" alt="Lane segmentation result 1" />
-  <img src="2.png" width="32%" alt="Lane segmentation result 2" />
-  <img src="3.png" width="32%" alt="Lane segmentation result 3" />
-</p>
-
-🎬 Three sample output videos are also included in the project root so the model's video-level results can be viewed directly.
 
 ## 🧠 Training
 
@@ -200,6 +207,7 @@ On successful startup, the logs show `CUDAExecutionProvider`; the green-overlay 
 | `main.py` | CUDA ONNX Runtime video segmentation runner |
 | `Dockerfile` | Unified image for conversion and GPU inference |
 | `1.png`, `2.png`, `3.png` | Example segmentation outputs |
+| `video1.gif`, `video2.gif` | Animated previews of video-level segmentation results |
 | `video1.mp4`, `video2.mp4`, `video3.mp4` | Example videos showing lane segmentation inference |
 
 ---
